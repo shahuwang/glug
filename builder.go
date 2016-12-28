@@ -1,6 +1,7 @@
 package glug
 
 import (
+	"fmt"
 	"reflect"
 )
 
@@ -10,7 +11,7 @@ type Builder struct {
 	funcs []PlugFunc
 }
 
-func (this Builder) Init(options ...interface{}) Glug {
+func (this *Builder) Init(options ...interface{}) {
 	for _, op := range options {
 		typ := reflect.TypeOf(op).Kind()
 		if typ == reflect.Struct {
@@ -23,13 +24,13 @@ func (this Builder) Init(options ...interface{}) Glug {
 			this.funcs = append(this.funcs, func(conn *Connection) {
 				function.Call([]reflect.Value{reflect.ValueOf(conn)})
 			})
-
+			fmt.Println("====xxxxx")
 		}
 	}
-	return this
 }
 
-func (this Builder) Call(conn *Connection) {
+func (this *Builder) Call(conn *Connection) {
+	fmt.Printf("%+v\n", this.funcs)
 	for _, callFunc := range this.funcs {
 		callFunc(conn)
 	}
