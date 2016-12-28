@@ -6,12 +6,30 @@ import (
 )
 
 type Segment interface {
-	// 路径的一段，即/path/的path部分
+	// 路径的 一段，即/path/的path部分
 	Match(segement string) bool
+	Init(options ...interface{})
+	Call(conn *Connection)
+}
+
+type NormalSegment struct {
+	segement string
+}
+
+func (this *NormalSegment) Match(segment string) bool {
+	return this.segment == segment
+}
+
+func (this *NormalSegment) Init(options ...interface{}) {
+
+}
+
+func (this *NormalSegment) Call(conn *Connection) {
+
 }
 
 type Node struct {
-	Segement *Segment
+	Segment  *Segment
 	Children []*Node
 }
 
@@ -22,7 +40,9 @@ func (this *Node) Match(segement string) bool {
 
 func NewNode(segement string) *Node {
 	//TODO
-	return new(Node)
+	seg := NormalSegement{segement: segement}
+	node := Node{Segment: &seg, Children: make([]*Node, 0)}
+	return &node
 }
 
 type PathTree struct {
@@ -49,10 +69,11 @@ func (this *PathTree) Add(path string) {
 	}
 }
 
-func (this *PathTree) Match(path string) *Segment {
+func (this *PathTree) Match(conn *Connection, path string) bool {
 	root := this.Root
 	segements := strings.Split(path, "/")
 	finded := true
+	allowed := make([]*Segment, 0)
 	for _, segement := range segements {
 		children := root.Children
 		index := sort.Search(len(children), func(i int) bool {
@@ -64,10 +85,12 @@ func (this *PathTree) Match(path string) *Segment {
 			break
 		}
 		root = children[index]
+		allowed = append(allowed, root.Segment)
 	}
 	if finded {
-		return root.Segement
-	} else {
-		return nil
+		for _, seg := range allowed {
+			seg.Call(conn)
+		}
 	}
+	return finded
 }
