@@ -1,37 +1,26 @@
 package glug
 
-import (
-	"fmt"
-	"reflect"
-)
+import ()
 
-type PlugFunc func(*Connection)
+type GlugFunc func(*Connection) bool
 
 type Builder struct {
-	funcs []PlugFunc
+	funcs []GlugFunc
 }
 
-func (this *Builder) Init(options ...interface{}) {
-	for _, op := range options {
-		typ := reflect.TypeOf(op).Kind()
-		if typ == reflect.Struct {
-			// 说明是实现了Glug接口的结构体
-			this.funcs = append(this.funcs, op.(Glug).Call)
-		}
-		if typ == reflect.Func {
-			// 说明只是如PlugFunc一样的函数
-			function := reflect.ValueOf(op)
-			this.funcs = append(this.funcs, func(conn *Connection) {
-				function.Call([]reflect.Value{reflect.ValueOf(conn)})
-			})
-			fmt.Println("====xxxxx")
-		}
-	}
+func NewBuilder() *Builder {
+	return &Builder{}
 }
 
-func (this *Builder) Call(conn *Connection) {
-	fmt.Printf("%+v\n", this.funcs)
+func (this *Builder) Call(conn *Connection) bool {
 	for _, callFunc := range this.funcs {
-		callFunc(conn)
+		if !callFunc(conn) {
+			return false
+		}
 	}
+	return true
+}
+
+func (this *Builder) Add(glug GlugFunc) {
+	this.funcs = append(this.funcs, glug)
 }

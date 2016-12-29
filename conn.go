@@ -7,6 +7,7 @@ import (
 type Connection struct {
 	Response http.ResponseWriter
 	Request  *http.Request
+	Handler  HandleFunc
 }
 
 func NewConnection(resp http.ResponseWriter, req *http.Request) *Connection {

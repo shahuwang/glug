@@ -1,60 +1,65 @@
 package glug
 
 import (
-	"fmt"
+	// "fmt"
 	"net/http"
 )
 
 type Glug interface {
-	Init(options ...interface{})
-	Call(conn *Connection)
+	Call(conn *Connection) bool
 }
 
 type Router interface {
 	BuildGlug(glugs ...interface{})
-	Init(options ...interface{}) Glug
 	Call(conn *Connection)
 	Match(conn *Connection)
 	Dispatch(conn *Connection)
 	ServeHTTP(http.ResponseWriter, *http.Request)
 }
 
-type HandlerFunc func(params ...interface{})
+type HandleFunc func(*Connection)
 
 type GlugRouter struct {
-	Builder Builder
+	Builder *Builder
 	GetTree *PathTree
 }
 
-func (this *GlugRouter) BuildGlug(glugs ...interface{}) {
-	builder := Builder{}
-	builder.Init(glugs...)
-	this.Builder = builder
+func NewRouter() *GlugRouter {
+	return &GlugRouter{GetTree: NewPathTree(), Builder: NewBuilder()}
 }
 
-func (this *GlugRouter) Init(options ...interface{}) {
+func (this *GlugRouter) Use(glug GlugFunc) {
+	this.Builder.Add(glug)
+}
+
+func (this *GlugRouter) Call(conn *Connection) bool {
+	return this.Builder.Call(conn)
+}
+
+func (this *GlugRouter) Match(conn *Connection) bool {
 	//TODO
+	path := conn.Request.URL.Path
+	switch conn.Request.Method {
+	case "GET":
+		if !this.GetTree.Match(conn, path) {
+			http.NotFound(conn.Response, conn.Request)
+			return false
+		}
+	}
+	return true
 }
 
-func (this *GlugRouter) Call(conn *Connection) {
-	this.Builder.Call(conn)
-}
-
-func (this *GlugRouter) Match(conn *Connection) {
+func (this *GlugRouter) Dispatch(conn *Connection) bool {
 	//TODO
+	conn.Handler(conn)
+	return true
 }
 
-func (this *GlugRouter) Dispatch(conn *Connection) {
-	//TODO
-	conn.Response.Write([]byte("hello world"))
-}
-
-func (this *GlugRouter) Get(path string, fn HandlerFunc) {
-
+func (this *GlugRouter) Get(path string, handle HandleFunc) {
+	this.GetTree.Add(path, handle)
 }
 
 func (this *GlugRouter) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	conn := NewConnection(resp, req)
-	fmt.Println("xxxxxxx")
 	this.Call(conn)
 }

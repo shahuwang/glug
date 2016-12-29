@@ -8,24 +8,26 @@ import (
 type Segment interface {
 	// 路径的 一段，即/path/的path部分
 	Match(segment string) bool
-	Init(options ...interface{})
-	Call(conn *Connection)
+	Call(conn *Connection) bool
+	AddHandle(handle HandleFunc)
 }
 
 type NormalSegment struct {
 	segment string
+	handle  HandleFunc
 }
 
 func (this *NormalSegment) Match(segment string) bool {
 	return this.segment == segment
 }
 
-func (this *NormalSegment) Init(options ...interface{}) {
-
+func (this *NormalSegment) Call(conn *Connection) bool {
+	conn.Handler = this.handle
+	return true
 }
 
-func (this *NormalSegment) Call(conn *Connection) {
-
+func (this *NormalSegment) AddHandle(handle HandleFunc) {
+	this.handle = handle
 }
 
 type Node struct {
@@ -49,7 +51,12 @@ type PathTree struct {
 	Root *Node
 }
 
-func (this *PathTree) Add(path string) {
+func NewPathTree() *PathTree {
+	node := NewNode("")
+	return &PathTree{Root: node}
+}
+
+func (this *PathTree) Add(path string, handle HandleFunc) {
 	segments := strings.Split(path, "/")
 	root := this.Root
 	for _, segment := range segments {
@@ -67,6 +74,7 @@ func (this *PathTree) Add(path string) {
 			root = children[index]
 		}
 	}
+	root.Segment.AddHandle(handle)
 }
 
 func (this *PathTree) Match(conn *Connection, path string) bool {

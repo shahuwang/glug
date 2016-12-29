@@ -12,12 +12,13 @@ type TestRouter struct {
 }
 
 func TestInterface(t *testing.T) {
-	tr := &TestRouter{}
+	tr := NewRouter()
 	fmt.Printf("%+v\n", tr)
-	tr.BuildGlug(
-		tr.Match,
-		tr.Dispatch,
-	)
+	tr.Use(tr.Match)
+	tr.Use(tr.Dispatch)
+	tr.Get("/login", func(conn *Connection) {
+		conn.Response.Write([]byte("loginxxxxxxx"))
+	})
 	er := http.ListenAndServe(":9083", tr)
 	fmt.Println(er)
 	resp, err := http.Get("http://localhost:9083")
