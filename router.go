@@ -23,6 +23,7 @@ type HandlerFunc func(params ...interface{})
 
 type GlugRouter struct {
 	Builder Builder
+	GetTree *PathTree
 }
 
 func (this *GlugRouter) BuildGlug(glugs ...interface{}) {
@@ -40,7 +41,6 @@ func (this *GlugRouter) Call(conn *Connection) {
 }
 
 func (this *GlugRouter) Match(conn *Connection) {
-	fmt.Println("============")
 	//TODO
 }
 

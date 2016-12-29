@@ -7,13 +7,13 @@ import (
 
 type Segment interface {
 	// 路径的 一段，即/path/的path部分
-	Match(segement string) bool
+	Match(segment string) bool
 	Init(options ...interface{})
 	Call(conn *Connection)
 }
 
 type NormalSegment struct {
-	segement string
+	segment string
 }
 
 func (this *NormalSegment) Match(segment string) bool {
@@ -29,18 +29,18 @@ func (this *NormalSegment) Call(conn *Connection) {
 }
 
 type Node struct {
-	Segment  *Segment
+	Segment  Segment
 	Children []*Node
 }
 
-func (this *Node) Match(segement string) bool {
+func (this *Node) Match(segment string) bool {
 	//TODO
-	return true
+	return this.Segment.Match(segment)
 }
 
-func NewNode(segement string) *Node {
+func NewNode(segment string) *Node {
 	//TODO
-	seg := NormalSegement{segement: segement}
+	seg := NormalSegment{segment: segment}
 	node := Node{Segment: &seg, Children: make([]*Node, 0)}
 	return &node
 }
@@ -50,17 +50,17 @@ type PathTree struct {
 }
 
 func (this *PathTree) Add(path string) {
-	segements := strings.Split(path, "/")
+	segments := strings.Split(path, "/")
 	root := this.Root
-	for _, segement := range segements {
+	for _, segment := range segments {
 		children := root.Children
 		index := sort.Search(len(children), func(i int) bool {
 			node := children[i]
-			return node.Match(segement)
+			return node.Match(segment)
 		})
 		if index == len(children) {
 			//没有找到
-			node := NewNode(segement)
+			node := NewNode(segment)
 			root.Children = append(root.Children, node)
 			root = node
 		} else {
@@ -71,14 +71,14 @@ func (this *PathTree) Add(path string) {
 
 func (this *PathTree) Match(conn *Connection, path string) bool {
 	root := this.Root
-	segements := strings.Split(path, "/")
+	segments := strings.Split(path, "/")
 	finded := true
-	allowed := make([]*Segment, 0)
-	for _, segement := range segements {
+	allowed := make([]Segment, 0)
+	for _, segment := range segments {
 		children := root.Children
 		index := sort.Search(len(children), func(i int) bool {
 			node := children[i]
-			return node.Match(segement)
+			return node.Match(segment)
 		})
 		if index == len(children) {
 			finded = false
