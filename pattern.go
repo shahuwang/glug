@@ -22,6 +22,7 @@ func (this *NormalSegment) Match(segment string) bool {
 }
 
 func (this *NormalSegment) Call(conn *Connection) bool {
+	//TODO 这里的处理逻辑值得商榷。。。。
 	conn.Handler = this.handle
 	return true
 }

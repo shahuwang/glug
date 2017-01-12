@@ -19,12 +19,17 @@ type Router interface {
 type HandleFunc func(*Connection)
 
 type GlugRouter struct {
-	Builder *Builder
-	GetTree *PathTree
+	Builder  *Builder
+	GetTree  *PathTree
+	PostTree *PathTree
 }
 
 func NewRouter() *GlugRouter {
-	return &GlugRouter{GetTree: NewPathTree(), Builder: NewBuilder()}
+	return &GlugRouter{
+		GetTree:  NewPathTree(),
+		PostTree: NewPathTree(),
+		Builder:  NewBuilder(),
+	}
 }
 
 func (this *GlugRouter) Use(glug GlugFunc) {
@@ -44,6 +49,11 @@ func (this *GlugRouter) Match(conn *Connection) bool {
 			http.NotFound(conn.Response, conn.Request)
 			return false
 		}
+	case "POST":
+		if !this.PostTree.Match(conn, path) {
+			http.NotFound(conn.Response, conn.Request)
+			return false
+		}
 	}
 	return true
 }
@@ -58,7 +68,11 @@ func (this *GlugRouter) Get(path string, handle HandleFunc) {
 	this.GetTree.Add(path, handle)
 }
 
+func (this *GlugRouter) Post(path string, handle HandleFunc) {
+	this.PostTree.Add(path, handle)
+}
+
 func (this *GlugRouter) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	conn := NewConnection(resp, req)
-	this.Call(conn)
+	go this.Call(conn)
 }
