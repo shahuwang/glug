@@ -1,7 +1,6 @@
 package glug
 
 import (
-	// "fmt"
 	"net/http"
 )
 

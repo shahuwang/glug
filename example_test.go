@@ -3,6 +3,7 @@ package glug
 import (
 	"fmt"
 	// "reflect"
+	"io/ioutil"
 	"net/http"
 	"testing"
 )
@@ -13,20 +14,17 @@ type TestRouter struct {
 
 func TestInterface(t *testing.T) {
 	tr := NewRouter()
-	fmt.Printf("%+v\n", tr)
 	tr.Use(tr.Match)
 	tr.Use(tr.Dispatch)
 	tr.Get("/login", func(conn *Connection) {
-		conn.Response.Write([]byte("loginxxxxxxx"))
+		conn.Response.Write([]byte("loginxxxxxxx15\n\r"))
 	})
-	er := http.ListenAndServe(":9083", tr)
-	fmt.Println(er)
-	resp, err := http.Get("http://localhost:9083")
+	go http.ListenAndServe(":9083", tr)
+	resp, err := http.Get("http://localhost:9083/login")
 	if err != nil {
 		fmt.Println(err)
 	}
-	var body []byte
-	_, err = resp.Body.Read(body)
-	fmt.Println(err)
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
 	fmt.Println(string(body))
 }

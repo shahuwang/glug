@@ -1,6 +1,8 @@
 package glug
 
-import ()
+import (
+// "fmt"
+)
 
 type GlugFunc func(*Connection) bool
 
