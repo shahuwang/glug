@@ -1,74 +1,48 @@
 package glug
 
 import (
+	// "fmt"
 	"sort"
 	"strings"
 )
 
-type Segment interface {
-	// 路径的 一段，即/path/的path部分
-	Match(segment string) bool
-	Call(conn *Connection) bool
-	AddHandle(handle HandleFunc)
-}
-
-type NormalSegment struct {
-	segment string
-	handle  HandleFunc
-}
-
-func (this *NormalSegment) Match(segment string) bool {
-	return this.segment == segment
-}
-
-func (this *NormalSegment) Call(conn *Connection) bool {
-	//TODO 这里的处理逻辑值得商榷。。。。
-	conn.Handler = this.handle
-	return true
-}
-
-func (this *NormalSegment) AddHandle(handle HandleFunc) {
-	this.handle = handle
-}
-
 type Node struct {
 	Segment  Segment
 	Children []*Node
+	origin   string // 存放原始的字符串
 }
 
-func (this *Node) Match(segment string) bool {
+func (this *Node) Match(conn *Connection, segment string) bool {
 	//TODO
-	return this.Segment.Match(segment)
-}
-
-func NewNode(segment string) *Node {
-	//TODO
-	seg := NormalSegment{segment: segment}
-	node := Node{Segment: &seg, Children: make([]*Node, 0)}
-	return &node
+	return this.Segment.Match(conn, segment)
 }
 
 type PathTree struct {
 	Root *Node
+	segs []SegMatchFunc
 }
 
 func NewPathTree() *PathTree {
-	node := NewNode("")
-	return &PathTree{Root: node}
+	segs := []SegMatchFunc{VariantMatchFunc, NormalMatchFunc}
+	node := &Node{Children: make([]*Node, 0), origin: ""}
+	return &PathTree{Root: node, segs: segs}
 }
 
 func (this *PathTree) Add(path string, handle HandleFunc) {
 	segments := strings.Split(path, "/")
 	root := this.Root
 	for _, segment := range segments {
+		if segment == "" {
+			continue
+		}
 		children := root.Children
 		index := sort.Search(len(children), func(i int) bool {
 			node := children[i]
-			return node.Match(segment)
+			return node.origin == segment
 		})
-		if index == len(children) {
+		if index >= len(children) {
 			//没有找到
-			node := NewNode(segment)
+			node := this.newNode(segment)
 			root.Children = append(root.Children, node)
 			root = node
 		} else {
@@ -84,10 +58,13 @@ func (this *PathTree) Match(conn *Connection, path string) bool {
 	finded := true
 	allowed := make([]Segment, 0)
 	for _, segment := range segments {
+		if segment == "" {
+			continue
+		}
 		children := root.Children
 		index := sort.Search(len(children), func(i int) bool {
 			node := children[i]
-			return node.Match(segment)
+			return node.Match(conn, segment)
 		})
 		if index == len(children) {
 			finded = false
@@ -102,4 +79,14 @@ func (this *PathTree) Match(conn *Connection, path string) bool {
 		}
 	}
 	return finded
+}
+
+func (this *PathTree) newNode(segment string) *Node {
+	for _, fun := range this.segs {
+		match, seg := fun(segment)
+		if match {
+			return &Node{Segment: seg, Children: make([]*Node, 0), origin: segment}
+		}
+	}
+	return nil
 }

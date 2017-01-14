@@ -1,6 +1,7 @@
 package glug
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -60,7 +61,9 @@ func (this *GlugRouter) Match(conn *Connection) bool {
 
 func (this *GlugRouter) Dispatch(conn *Connection) bool {
 	//TODO
+	fmt.Println("-----------------")
 	conn.Handler(conn)
+	fmt.Println("+++++++++++++++++")
 	return true
 }
 
@@ -74,5 +77,5 @@ func (this *GlugRouter) Post(path string, handle HandleFunc) {
 
 func (this *GlugRouter) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	conn := NewConnection(resp, req)
-	go this.Call(conn)
+	this.Call(conn)
 }
