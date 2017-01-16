@@ -7,10 +7,10 @@ import (
 type RegisterFunc func(*Resp)
 
 type Resp struct {
-	conn   *Connection
-	status int
-	header http.Header
-	body   []byte
+	Conn   *Connection
+	Status int
+	Header http.Header
+	Body   []byte
 }
 
 type Connection struct {
