@@ -1,7 +1,6 @@
 package glug
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -47,12 +46,12 @@ func (this *GlugRouter) Match(conn *Connection) bool {
 	switch conn.Request.Method {
 	case "GET":
 		if !this.GetTree.Match(conn, path) {
-			http.NotFound(conn.Response, conn.Request)
+			http.NotFound(conn.response, conn.Request)
 			return false
 		}
 	case "POST":
 		if !this.PostTree.Match(conn, path) {
-			http.NotFound(conn.Response, conn.Request)
+			http.NotFound(conn.response, conn.Request)
 			return false
 		}
 	}
@@ -61,9 +60,7 @@ func (this *GlugRouter) Match(conn *Connection) bool {
 
 func (this *GlugRouter) Dispatch(conn *Connection) bool {
 	//TODO
-	fmt.Println("-----------------")
 	conn.Handler(conn)
-	fmt.Println("+++++++++++++++++")
 	return true
 }
 
