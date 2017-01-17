@@ -24,6 +24,13 @@ func TestInterface(t *testing.T) {
 		name := conn.PathParams["name"]
 		conn.Sendresp(200, conn.Request.Header, []byte(name))
 	})
+	tr2 := NewRouter()
+	tr2.Use(tr2.Match)
+	tr2.Use(tr2.Dispatch)
+	tr2.Get("/hello", func(conn *Connection) {
+		fmt.Println("hello +++++++++++++++")
+	})
+	tr.Forward("/logout/", tr2)
 	go http.ListenAndServe(":8083", tr)
 	resp, err := http.Get("http://localhost:8083/login?a=1")
 	if err != nil {
@@ -36,4 +43,5 @@ func TestInterface(t *testing.T) {
 	resp, err = http.Get("http://localhost:8083/login/hello")
 	body, err = ioutil.ReadAll(resp.Body)
 	fmt.Println(string(body))
+	http.Get("http://localhost:8083/logout/hello")
 }

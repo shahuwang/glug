@@ -28,7 +28,19 @@ func NewPathTree() *PathTree {
 	return &PathTree{Root: node, segs: segs}
 }
 
+func (this *PathTree) Merge(path string, tree *PathTree) {
+	//在路径path之后将tree并入
+	node := this.ensureNode(path)
+	node.Children = tree.Root.Children
+	this.segs = append(this.segs, tree.segs...)
+}
+
 func (this *PathTree) Add(path string, handle HandleFunc) {
+	node := this.ensureNode(path)
+	node.Segment.AddHandle(handle)
+}
+
+func (this *PathTree) ensureNode(path string) *Node {
 	segments := strings.Split(path, "/")
 	root := this.Root
 	for _, segment := range segments {
@@ -49,7 +61,7 @@ func (this *PathTree) Add(path string, handle HandleFunc) {
 			root = children[index]
 		}
 	}
-	root.Segment.AddHandle(handle)
+	return root
 }
 
 func (this *PathTree) Match(conn *Connection, path string) bool {

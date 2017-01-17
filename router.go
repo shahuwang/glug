@@ -1,6 +1,7 @@
 package glug
 
 import (
+	// "fmt"
 	"net/http"
 )
 
@@ -60,6 +61,9 @@ func (this *GlugRouter) Match(conn *Connection) bool {
 
 func (this *GlugRouter) Dispatch(conn *Connection) bool {
 	//TODO
+	if conn.Handler == nil {
+		http.NotFound(conn.response, conn.Request)
+	}
 	conn.Handler(conn)
 	return true
 }
@@ -70,6 +74,11 @@ func (this *GlugRouter) Get(path string, handle HandleFunc) {
 
 func (this *GlugRouter) Post(path string, handle HandleFunc) {
 	this.PostTree.Add(path, handle)
+}
+
+func (this *GlugRouter) Forward(path string, router *GlugRouter) {
+	this.GetTree.Merge(path, router.GetTree)
+	this.PostTree.Merge(path, router.PostTree)
 }
 
 func (this *GlugRouter) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
