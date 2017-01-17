@@ -26,7 +26,7 @@ func NormalMatchFunc(segment string) (bool, Segment) {
 
 func VariantMatchFunc(segment string) (bool, Segment) {
 	if strings.HasPrefix(segment, ":") {
-		seg := VariantSegment{segment: segment}
+		seg := VariantSegment{segment: segment[1:]}
 		return true, &seg
 	}
 	return false, nil
