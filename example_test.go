@@ -15,6 +15,7 @@ type TestRouter struct {
 func TestInterface(t *testing.T) {
 	tr := NewRouter()
 	tr.Use(tr.Match)
+	tr.Use(Logger)
 	tr.Use(tr.Dispatch)
 	tr.Get("/login", func(conn *Connection) {
 		conn.Sendresp(500, conn.Request.Header, []byte("hello"))
@@ -26,6 +27,5 @@ func TestInterface(t *testing.T) {
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	fmt.Printf("%+v\n", resp.Header)
 	fmt.Printf("read body is %s, err is %s, %s\n", body, err, resp.Status)
 }

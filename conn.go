@@ -44,12 +44,16 @@ func (conn *Connection) Sendresp(status int, header http.Header, body []byte) {
 	conn.response.Write(body)
 }
 
+func (conn *Connection) Register(fun RegisterFunc) {
+	conn.registerFuncs = append(conn.registerFuncs, fun)
+}
+
 func (conn *Connection) runBeforeSend(status int, header http.Header, body []byte) {
 	resp := &Resp{
-		conn:   conn,
-		status: status,
-		header: header,
-		body:   body,
+		Conn:   conn,
+		Status: status,
+		Header: header,
+		Body:   body,
 	}
 	for _, fun := range conn.registerFuncs {
 		fun(resp)
