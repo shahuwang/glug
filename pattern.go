@@ -2,7 +2,7 @@ package glug
 
 import (
 	// "fmt"
-	"sort"
+	// "sort"
 	"strings"
 )
 
@@ -48,17 +48,20 @@ func (this *PathTree) ensureNode(path string) *Node {
 			continue
 		}
 		children := root.Children
-		index := sort.Search(len(children), func(i int) bool {
-			node := children[i]
-			return node.origin == segment
-		})
-		if index >= len(children) {
-			//没有找到
-			node := this.newNode(segment)
+		var node *Node
+		matched := false
+		for _, node = range children {
+			if node.origin == segment {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			node = this.newNode(segment)
 			root.Children = append(root.Children, node)
 			root = node
 		} else {
-			root = children[index]
+			root = node
 		}
 	}
 	return root
@@ -67,28 +70,31 @@ func (this *PathTree) ensureNode(path string) *Node {
 func (this *PathTree) Match(conn *Connection, path string) bool {
 	root := this.Root
 	segments := strings.Split(path, "/")
+	var final Segment
 	finded := true
-	allowed := make([]Segment, 0)
 	for _, segment := range segments {
 		if segment == "" {
 			continue
 		}
 		children := root.Children
-		index := sort.Search(len(children), func(i int) bool {
-			node := children[i]
-			return node.Match(conn, segment)
-		})
-		if index == len(children) {
+		var node *Node
+		matched := false
+		for _, node = range children {
+			if node.Match(conn, segment) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			// 确保每个segment都是匹配上了才call
 			finded = false
 			break
 		}
-		root = children[index]
-		allowed = append(allowed, root.Segment)
+		root = node
+		final = node.Segment
 	}
 	if finded {
-		for _, seg := range allowed {
-			seg.Call(conn)
-		}
+		final.Call(conn)
 	}
 	return finded
 }

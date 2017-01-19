@@ -3,8 +3,9 @@ package glug
 import (
 	"fmt"
 	// "reflect"
-	"io/ioutil"
+	// "io/ioutil"
 	"net/http"
+	// "sort"
 	"testing"
 )
 
@@ -18,9 +19,11 @@ func TestInterface(t *testing.T) {
 	tr.Use(Logger)
 	tr.Use(tr.Dispatch)
 	tr.Get("/login", func(conn *Connection) {
+		fmt.Println("login +++++++++++++")
 		conn.Sendresp(500, conn.Request.Header, []byte("hello"))
 	})
 	tr.Get("/login/:name/", func(conn *Connection) {
+		fmt.Println("login name +++++++++++++++++")
 		name := conn.PathParams["name"]
 		conn.Sendresp(200, conn.Request.Header, []byte(name))
 	})
@@ -32,16 +35,7 @@ func TestInterface(t *testing.T) {
 	})
 	tr.Forward("/logout/", tr2)
 	go http.ListenAndServe(":8083", tr)
-	resp, err := http.Get("http://localhost:8083/login?a=1")
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	fmt.Printf("read body is %s, err is %s, %s\n", body, err, resp.Status)
-
-	resp, err = http.Get("http://localhost:8083/login/hello")
-	body, err = ioutil.ReadAll(resp.Body)
-	fmt.Println(string(body))
 	http.Get("http://localhost:8083/logout/hello")
+	http.Get("http://localhost:8083/login/hello")
+	http.Get("http://localhost:8083/login/")
 }
