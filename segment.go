@@ -1,7 +1,6 @@
 package glug
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -40,7 +39,6 @@ type NormalSegment struct {
 }
 
 func (this *NormalSegment) Match(conn *Connection, segment string) bool {
-	fmt.Printf("%s, %s\n", this.segment, segment)
 	return this.segment == segment
 }
 

@@ -18,7 +18,7 @@ type Connection struct {
 	Request       *http.Request
 	Handler       HandleFunc
 	PathParams    map[string]string      //譬如/test/:name/ 这种路径，会取得name的实际值，存放于这里
-	Params        map[string]interface{} // 参数存放在这
+	Context       map[string]interface{} // 用于存放每个glug函数插入的数据
 	registerFuncs []RegisterFunc
 }
 
@@ -28,7 +28,7 @@ func NewConnection(resp http.ResponseWriter, req *http.Request) *Connection {
 		Request:       req,
 		registerFuncs: make([]RegisterFunc, 0),
 		PathParams:    make(map[string]string),
-		Params:        make(map[string]interface{}),
+		Context:       make(map[string]interface{}),
 	}
 	return &conn
 }

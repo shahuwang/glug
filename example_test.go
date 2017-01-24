@@ -2,11 +2,9 @@ package glug
 
 import (
 	"fmt"
-	"reflect"
 	// "io/ioutil"
 	"net/http"
 	// "sort"
-	"github.com/codegangsta/inject"
 	"testing"
 )
 
@@ -39,19 +37,4 @@ func TestInterface(t *testing.T) {
 	http.Get("http://localhost:8083/logout/hello")
 	http.Get("http://localhost:8083/login/hello")
 	http.Get("http://localhost:8083/login/")
-}
-
-func TestInject(t *testing.T) {
-	inj := inject.New()
-	tr := NewRouter()
-	// inj.MapTo(tr, (*GlugRouter)(nil))
-	// inj.Map(tr)
-	inj.Set(reflect.TypeOf(tr), reflect.ValueOf(tr))
-	inj.Invoke(Get)
-}
-
-func Get(tr *GlugRouter) {
-	fmt.Printf("%+v\n", tr)
-	tr2 := reflect.ValueOf(tr)
-	tr2.Call
 }
