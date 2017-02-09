@@ -3,6 +3,7 @@ package glug
 import (
 	// "fmt"
 	"net/http"
+	"reflect"
 )
 
 type Glug interface {
@@ -10,10 +11,9 @@ type Glug interface {
 }
 
 type Router interface {
-	BuildGlug(glugs ...interface{})
-	Call(conn *Connection)
-	Match(conn *Connection)
-	Dispatch(conn *Connection)
+	Call(conn *Connection) bool
+	Match(conn *Connection) bool
+	Dispatch(conn *Connection) bool
 	ServeHTTP(http.ResponseWriter, *http.Request)
 }
 
@@ -25,12 +25,10 @@ type GlugRouter struct {
 	PostTree *PathTree
 }
 
-func NewRouter() *GlugRouter {
-	return &GlugRouter{
-		GetTree:  NewPathTree(),
-		PostTree: NewPathTree(),
-		Builder:  NewBuilder(),
-	}
+func (this *GlugRouter) Init() {
+	this.GetTree = NewPathTree()
+	this.PostTree = NewPathTree()
+	this.Builder = NewBuilder()
 }
 
 func (this *GlugRouter) Use(glug GlugFunc) {
@@ -76,9 +74,12 @@ func (this *GlugRouter) Post(path string, handle HandleFunc) {
 	this.PostTree.Add(path, handle)
 }
 
-func (this *GlugRouter) Forward(path string, router *GlugRouter) {
-	this.GetTree.Merge(path, router.GetTree)
-	this.PostTree.Merge(path, router.PostTree)
+func (this *GlugRouter) Forward(path string, router Router) {
+	r := reflect.ValueOf(router).Elem()
+	gtree := r.FieldByName("GetTree").Interface().(*PathTree)
+	ptree := r.FieldByName("PostTree").Interface().(*PathTree)
+	this.GetTree.Merge(path, gtree)
+	this.PostTree.Merge(path, ptree)
 }
 
 func (this *GlugRouter) ServeHTTP(resp http.ResponseWriter, req *http.Request) {

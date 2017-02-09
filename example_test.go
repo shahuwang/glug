@@ -13,7 +13,8 @@ type TestRouter struct {
 }
 
 func TestInterface(t *testing.T) {
-	tr := NewRouter()
+	tr := new(TestRouter)
+	tr.Init()
 	tr.Use(tr.Match)
 	tr.Use(Logger)
 	tr.Use(tr.Dispatch)
@@ -26,7 +27,8 @@ func TestInterface(t *testing.T) {
 		name := conn.PathParams["name"]
 		conn.Sendresp(200, conn.Request.Header, []byte(name))
 	})
-	tr2 := NewRouter()
+	tr2 := new(TestRouter)
+	tr2.Init()
 	tr2.Use(tr2.Match)
 	tr2.Use(tr2.Dispatch)
 	tr2.Get("/hello", func(conn *Connection) {
